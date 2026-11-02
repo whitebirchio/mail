@@ -7,7 +7,7 @@ import { SESSION_COOKIE, SESSION_TTL_S, cookieOptions, openSession, renewal, sea
  * send anyone without a valid owner session to /login, slide the session's
  * expiry, and set a per-request CSP nonce (Next applies it to its own scripts).
  */
-const PUBLIC = new Set(["/login", "/privacy", "/auth/start", "/auth/callback", "/auth/logout", "/auth/expired"]);
+const PUBLIC = new Set(["/probe/bytes", "/login", "/privacy", "/auth/start", "/auth/callback", "/auth/logout", "/auth/expired"]);
 
 function csp(nonce: string, dev: boolean): string {
   return [
