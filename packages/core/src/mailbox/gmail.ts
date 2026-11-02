@@ -1,7 +1,21 @@
 import { z } from "zod";
 import type { TokenSource } from "../google/token";
 import { mapLimit } from "../util/limit";
-import { type Label, type Mailbox, type MailboxError, type Result, type ThreadMeta, type ThreadPage, type ThreadQuery, fail, ok } from "./port";
+import { findPart } from "../message/parse";
+import {
+  type AttachmentData,
+  type FullThread,
+  type Label,
+  type Mailbox,
+  type MailboxError,
+  type Part,
+  type Result,
+  type ThreadMeta,
+  type ThreadPage,
+  type ThreadQuery,
+  fail,
+  ok,
+} from "./port";
 
 /**
  * The Gmail REST adapter (SPEC.md, Tech stack): plain fetch, every response
@@ -34,6 +48,19 @@ const messageMetaSchema = z.object({
   payload: z.object({ mimeType: z.string().default(""), headers: z.array(header).default([]) }).default({ mimeType: "", headers: [] }),
 });
 const threadMetaSchema = z.object({ id: z.string(), messages: z.array(messageMetaSchema).default([]) });
+const partSchema: z.ZodType<Part> = z.lazy(() =>
+  z.object({
+    partId: z.string().default(""),
+    mimeType: z.string().default(""),
+    filename: z.string().default(""),
+    headers: z.array(header).default([]),
+    body: z.object({ size: z.number().int().nonnegative().default(0), data: z.string().optional(), attachmentId: z.string().optional() }).default({ size: 0 }),
+    parts: z.array(partSchema).optional(),
+  }),
+) as z.ZodType<Part>;
+const fullMessageSchema = messageMetaSchema.extend({ payload: partSchema });
+const fullThreadSchema = z.object({ id: z.string(), messages: z.array(fullMessageSchema).default([]) });
+const attachmentSchema = z.object({ size: z.number().int().optional(), data: z.string() });
 
 export interface GmailOptions {
   fetchFn?: typeof fetch;
@@ -102,6 +129,38 @@ export class GmailMailbox implements Mailbox {
       });
     }
     return ok({ threads, nextPageToken: list.value.nextPageToken ?? null, resultSizeEstimate: list.value.resultSizeEstimate });
+  }
+
+  async getThread(threadId: string): Promise<Result<FullThread>> {
+    const r = await this.json("threads.get", `/threads/${encodeURIComponent(threadId)}?format=full`, fullThreadSchema);
+    if (!r.ok) return r;
+    return ok({
+      id: r.value.id,
+      messages: r.value.messages.map((m) => ({
+        id: m.id,
+        threadId: m.threadId,
+        labelIds: m.labelIds,
+        internalDate: Number(m.internalDate),
+        snippet: m.snippet,
+        headers: m.payload.headers,
+        mimeType: m.payload.mimeType,
+        payload: m.payload,
+      })),
+    });
+  }
+
+  async getAttachment(messageId: string, partId: string): Promise<Result<AttachmentData>> {
+    const msg = await this.json("messages.get", `/messages/${encodeURIComponent(messageId)}?format=full`, fullMessageSchema);
+    if (!msg.ok) return msg;
+    const part = findPart(msg.value.payload, partId);
+    if (!part || part.mimeType.toLowerCase().startsWith("multipart/")) return fail("not-found");
+    let data = part.body.data;
+    if (part.body.attachmentId) {
+      const att = await this.json("attachments.get", `/messages/${encodeURIComponent(messageId)}/attachments/${encodeURIComponent(part.body.attachmentId)}`, attachmentSchema);
+      if (!att.ok) return att;
+      data = att.value.data;
+    }
+    return ok({ filename: part.filename, mimeType: part.mimeType || "application/octet-stream", bytes: new Uint8Array(Buffer.from(data ?? "", "base64url")) });
   }
 
   /** One Gmail call: auth, retries, status mapping and validation. */

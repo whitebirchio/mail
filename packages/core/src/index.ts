@@ -6,3 +6,5 @@ export * from "./message/headers";
 export { decodeEntities } from "./message/entities";
 export * from "./views/thread-list";
 export * from "./message/sanitize";
+export * from "./message/parse";
+export * from "./views/thread";

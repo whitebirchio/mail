@@ -59,7 +59,35 @@ export interface ThreadQuery {
   pageSize?: number;
 }
 
+/** One MIME part as Gmail returns it: bodies are already transfer-decoded, then base64url-encoded. */
+export interface Part {
+  partId: string;
+  mimeType: string;
+  filename: string;
+  headers: Header[];
+  body: { size: number; data?: string; attachmentId?: string };
+  parts?: Part[];
+}
+
+export interface FullMessage extends MessageMeta {
+  payload: Part;
+}
+
+export interface FullThread {
+  id: string;
+  messages: FullMessage[];
+}
+
+export interface AttachmentData {
+  filename: string;
+  mimeType: string;
+  bytes: Uint8Array;
+}
+
 export interface Mailbox {
   listLabels(): Promise<Result<Label[]>>;
   listThreads(query: ThreadQuery): Promise<Result<ThreadPage>>;
+  getThread(threadId: string): Promise<Result<FullThread>>;
+  /** A part's bytes, by the message and the part's partId (inline or stored as an attachment). */
+  getAttachment(messageId: string, partId: string): Promise<Result<AttachmentData>>;
 }

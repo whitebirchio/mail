@@ -1,5 +1,19 @@
 import { headerValue } from "../message/headers";
-import { type Label, type Mailbox, type MailboxError, type Result, type ThreadMeta, type ThreadPage, type ThreadQuery, fail, ok } from "./port";
+import { findPart } from "../message/parse";
+import {
+  type AttachmentData,
+  type FullMessage,
+  type FullThread,
+  type Label,
+  type Mailbox,
+  type MailboxError,
+  type Result,
+  type ThreadMeta,
+  type ThreadPage,
+  type ThreadQuery,
+  fail,
+  ok,
+} from "./port";
 
 /**
  * An in-memory Mailbox for tests. Threads are listed newest first; `q`
@@ -10,7 +24,7 @@ export class FakeMailbox implements Mailbox {
   failNext: MailboxError | null = null;
 
   constructor(
-    public threads: ThreadMeta[] = [],
+    public threads: (ThreadMeta | FullThread)[] = [],
     public userLabels: { id: string; name: string }[] = [],
   ) {}
 
@@ -48,5 +62,22 @@ export class FakeMailbox implements Mailbox {
     const start = query.pageToken ? Number(query.pageToken) : 0;
     const page = matches.slice(start, start + size);
     return ok({ threads: page, nextPageToken: start + size < matches.length ? String(start + size) : null, resultSizeEstimate: matches.length });
+  }
+
+  async getThread(threadId: string): Promise<Result<FullThread>> {
+    const f = this.failing<FullThread>();
+    if (f) return f;
+    const t = this.threads.find((x) => x.id === threadId);
+    if (!t || !t.messages.every((m) => "payload" in m)) return fail("not-found");
+    return ok(structuredClone(t) as FullThread);
+  }
+
+  async getAttachment(messageId: string, partId: string): Promise<Result<AttachmentData>> {
+    const f = this.failing<AttachmentData>();
+    if (f) return f;
+    const m = this.threads.flatMap((t) => t.messages).find((x) => x.id === messageId) as FullMessage | undefined;
+    const part = m?.payload ? findPart(m.payload, partId) : null;
+    if (!part) return fail("not-found");
+    return ok({ filename: part.filename, mimeType: part.mimeType, bytes: new Uint8Array(Buffer.from(part.body.data ?? "", "base64url")) });
   }
 }
