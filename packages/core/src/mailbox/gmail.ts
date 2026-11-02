@@ -63,6 +63,9 @@ const fullMessageSchema = messageMetaSchema.extend({ payload: partSchema });
 const fullThreadSchema = z.object({ id: z.string(), messages: z.array(fullMessageSchema).default([]) });
 const attachmentSchema = z.object({ size: z.number().int().optional(), data: z.string() });
 const sentSchema = z.object({ id: z.string(), threadId: z.string() });
+const sendAsSchema = z.object({
+  sendAs: z.array(z.object({ sendAsEmail: z.string(), displayName: z.string().default(""), isPrimary: z.boolean().default(false) })).default([]),
+});
 export const GMAIL_UPLOAD = "https://gmail.googleapis.com/upload/gmail/v1/users/me";
 
 export interface GmailOptions {
@@ -179,6 +182,13 @@ export class GmailMailbox implements Mailbox {
   async untrashThread(threadId: string): Promise<Result<null>> {
     const r = await this.post("threads.untrash", `/threads/${encodeURIComponent(threadId)}/untrash`);
     return r.ok ? ok(null) : r;
+  }
+
+  async sender(): Promise<Result<{ email: string; name: string }>> {
+    const r = await this.json("sendAs.list", "/settings/sendAs", sendAsSchema);
+    if (!r.ok) return r;
+    const primary = r.value.sendAs.find((s) => s.isPrimary) ?? r.value.sendAs[0];
+    return primary ? ok({ email: primary.sendAsEmail, name: primary.displayName }) : fail("not-found");
   }
 
   /** Multipart upload: JSON metadata (the threadId) plus the raw message, up to Gmail's 35 MB. */

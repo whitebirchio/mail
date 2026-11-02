@@ -121,6 +121,14 @@ export class FakeMailbox implements Mailbox {
     return this.relabel(threadId, (l) => void l.delete("TRASH"));
   }
 
+  /** The identity sender() reports. */
+  identity = { email: "owner@example.com", name: "Owner Example" };
+
+  async sender(): Promise<Result<{ email: string; name: string }>> {
+    const f = this.failing<{ email: string; name: string }>();
+    return f ?? ok(this.identity);
+  }
+
   /** Messages handed to send(), for assertions. */
   sent: { raw: string; threadId: string | null }[] = [];
 

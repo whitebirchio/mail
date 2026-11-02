@@ -49,7 +49,7 @@ export default async function ThreadPage({ params, searchParams }: { params: Pro
   const owner = config.ownerEmail.toLowerCase();
   const cards: MessageCardData[] = view.messages.map((m) => {
     const others = [...m.to, ...m.cc].filter((a) => a.email.toLowerCase() !== owner);
-    const compose = (mode: string) => `/compose?${new URLSearchParams({ mode, m: m.id, back: selfHref })}`;
+    const compose = (mode: string) => `/compose?${new URLSearchParams({ mode, t: threadId, m: m.id, back: selfHref })}`;
     return {
       id: m.id,
       fromName: m.fromName,

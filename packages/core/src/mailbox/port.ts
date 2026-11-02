@@ -94,6 +94,8 @@ export interface Mailbox {
   modifyThread(threadId: string, change: LabelChange): Promise<Result<null>>;
   trashThread(threadId: string): Promise<Result<null>>;
   untrashThread(threadId: string): Promise<Result<null>>;
+  /** The primary send-as identity: the address and display name Gmail sends as. */
+  sender(): Promise<Result<{ email: string; name: string }>>;
   /** Send an RFC 5322 message; a threadId keeps a reply in its conversation. */
   send(raw: string, threadId: string | null): Promise<Result<{ id: string; threadId: string }>>;
 }

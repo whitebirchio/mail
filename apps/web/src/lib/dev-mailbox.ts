@@ -96,10 +96,12 @@ function seed(): FakeMailbox {
       messages: [msg(`th-bulk-${i}`, { from: `Sender ${i + 1} <sender${i + 1}@example.com>`, subject: `Invented message number ${i + 1}`, ago: (100 + i * 20) * HOUR, labels: ["INBOX"], snippet: "Filler so the inbox has more than one page.", body: leaf("text/plain", "Filler.") })],
     })),
   ];
-  return new FakeMailbox(threads, [
+  const fake = new FakeMailbox(threads, [
     { id: "Label_1", name: "Receipts" },
     { id: "Label_2", name: "Travel" },
   ]);
+  fake.identity = { email: "scott.schmalz@gmail.com", name: "Scott" };
+  return fake;
 }
 
 const g = globalThis as { __mailDevMailbox?: FakeMailbox };

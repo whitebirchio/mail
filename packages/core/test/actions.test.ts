@@ -116,3 +116,17 @@ describe("GmailMailbox.send", () => {
     );
   });
 });
+
+describe("GmailMailbox.sender", () => {
+  it("reads the primary send-as identity", async () => {
+    const fetchFn = (async (url: string) => {
+      expect(url).toBe("https://gmail.googleapis.com/gmail/v1/users/me/settings/sendAs");
+      return new Response(
+        JSON.stringify({ sendAs: [{ sendAsEmail: "alias@example.org", displayName: "Alias" }, { sendAsEmail: "owner@example.com", displayName: "Owner Example", isPrimary: true }] }),
+        { status: 200 },
+      );
+    }) as unknown as typeof fetch;
+    const tokens: TokenSource = { get: async () => ({ ok: true, accessToken: "ya29.t" }) };
+    expect(await new GmailMailbox(tokens, { fetchFn }).sender()).toEqual({ ok: true, value: { email: "owner@example.com", name: "Owner Example" } });
+  });
+});
