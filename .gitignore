@@ -17,7 +17,7 @@ next-env.d.ts
 *.log
 
 # CDK
-cdk.out/
+cdk.out*/
 
 # Claude Code local state
 .claude/worktrees/
