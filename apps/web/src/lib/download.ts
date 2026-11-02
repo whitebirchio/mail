@@ -6,8 +6,12 @@
  * even if a browser renders the file anyway.
  */
 
-/** The largest file Mail will stream. Revisited after T5's spike measures the Web Function's limit. */
-export const MAX_DOWNLOAD_BYTES = 6 * 1024 * 1024;
+/**
+ * The largest file Mail will serve. T5's spike (2026-11-02) sent 40 MB through
+ * CloudFront and the Web Function intact; Gmail caps attachments at 25 MB.
+ * The bound is memory: Gmail returns the file as base64 inside JSON.
+ */
+export const MAX_DOWNLOAD_BYTES = 35 * 1024 * 1024;
 
 const SAFE_TYPES = /^(image\/(png|jpeg|gif|webp|bmp|avif)|application\/pdf|text\/plain|text\/csv|text\/calendar|application\/zip|audio\/[a-z0-9.+-]+|video\/[a-z0-9.+-]+|application\/(msword|vnd\.[a-z0-9.+-]+))$/i;
 

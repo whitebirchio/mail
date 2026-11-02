@@ -342,7 +342,7 @@ export async function triageAction(threadIds: string[], verb: Triage) {
   - The consent screen shows an "unverified app" warning, which you click through once.
   - The OAuth app must be **published to Production**. In Testing status, refresh tokens expire every 7 days.
   - Personal use stays far below the 100-user limit for unverified apps.
-- **Attachment size limits on Web Functions** aren't documented. The plan starts with a spike to measure the largest download that streams through CloudFront and the Web Function. Above that limit, the UI says the file is too large rather than failing silently.
+- ~~**Attachment size limits on Web Functions** aren't documented.~~ **Resolved by T5's spike (2026-11-02):** 1–40 MB responses all arrived intact through CloudFront and the Web Function (40 MB in about 5 s). Mail serves files up to 35 MB, above Gmail's 25 MB attachment cap; larger ones are labelled "too large here".
 - **Gmail quota.** Listing 25 threads takes one `threads.list` plus 25 `threads.get` calls (metadata format). That's about 255 quota units, against a per-user limit of about 250 units per second. The plan has to pick a strategy: Gmail's batch endpoint, bounded concurrency, or `messages.list` with metadata.
 
 ## Public repo
