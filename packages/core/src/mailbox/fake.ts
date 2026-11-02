@@ -120,4 +120,14 @@ export class FakeMailbox implements Mailbox {
     this.calls.push({ op: "untrash", threadId });
     return this.relabel(threadId, (l) => void l.delete("TRASH"));
   }
+
+  /** Messages handed to send(), for assertions. */
+  sent: { raw: string; threadId: string | null }[] = [];
+
+  async send(raw: string, threadId: string | null): Promise<Result<{ id: string; threadId: string }>> {
+    const f = this.failing<{ id: string; threadId: string }>();
+    if (f) return f;
+    this.sent.push({ raw, threadId });
+    return ok({ id: `sent-${this.sent.length}`, threadId: threadId ?? `thread-sent-${this.sent.length}` });
+  }
 }

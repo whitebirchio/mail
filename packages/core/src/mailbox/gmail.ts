@@ -62,6 +62,8 @@ const partSchema: z.ZodType<Part> = z.lazy(() =>
 const fullMessageSchema = messageMetaSchema.extend({ payload: partSchema });
 const fullThreadSchema = z.object({ id: z.string(), messages: z.array(fullMessageSchema).default([]) });
 const attachmentSchema = z.object({ size: z.number().int().optional(), data: z.string() });
+const sentSchema = z.object({ id: z.string(), threadId: z.string() });
+export const GMAIL_UPLOAD = "https://gmail.googleapis.com/upload/gmail/v1/users/me";
 
 export interface GmailOptions {
   fetchFn?: typeof fetch;
@@ -179,19 +181,40 @@ export class GmailMailbox implements Mailbox {
     return r.ok ? ok(null) : r;
   }
 
+  /** Multipart upload: JSON metadata (the threadId) plus the raw message, up to Gmail's 35 MB. */
+  async send(raw: string, threadId: string | null): Promise<Result<{ id: string; threadId: string }>> {
+    const b = `mail-upload-${crypto.getRandomValues(new Uint32Array(2)).join("")}`;
+    const body = [
+      `--${b}`,
+      "Content-Type: application/json; charset=UTF-8",
+      "",
+      JSON.stringify(threadId ? { threadId } : {}),
+      `--${b}`,
+      "Content-Type: message/rfc822",
+      "",
+      raw,
+      `--${b}--`,
+      "",
+    ].join("\r\n");
+    const res = await this.request("messages.send", "", { method: "POST", headers: { "content-type": `multipart/related; boundary=${b}` }, body }, `${GMAIL_UPLOAD}/messages/send?uploadType=multipart`);
+    if (!res.ok) return res;
+    const parsed = sentSchema.safeParse(await res.value.json().catch(() => undefined));
+    return parsed.success ? ok(parsed.data) : fail("invalid-response");
+  }
+
   private post(endpoint: string, path: string, body?: unknown): Promise<Result<Response>> {
-    return this.send(endpoint, path, { method: "POST", ...(body === undefined ? {} : { headers: { "content-type": "application/json" }, body: JSON.stringify(body) }) });
+    return this.request(endpoint, path, { method: "POST", ...(body === undefined ? {} : { headers: { "content-type": "application/json" }, body: JSON.stringify(body) }) });
   }
 
   /** One Gmail call: auth, retries, status mapping and validation. */
   protected async json<S extends z.ZodType>(endpoint: string, path: string, schema: S, init: RequestInit = {}): Promise<Result<z.output<S>>> {
-    const res = await this.send(endpoint, path, init);
+    const res = await this.request(endpoint, path, init);
     if (!res.ok) return res;
     const parsed = schema.safeParse(await res.value.json().catch(() => undefined));
     return parsed.success ? ok(parsed.data) : fail("invalid-response");
   }
 
-  protected async send(endpoint: string, path: string, init: RequestInit, url = `${GMAIL}${path}`): Promise<Result<Response>> {
+  protected async request(endpoint: string, path: string, init: RequestInit, url = `${GMAIL}${path}`): Promise<Result<Response>> {
     let refreshed = false;
     let backedOff = false;
     for (;;) {

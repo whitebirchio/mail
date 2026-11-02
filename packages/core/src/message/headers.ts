@@ -59,8 +59,8 @@ export interface Address {
   email: string;
 }
 
-/** Split an address list on commas outside quotes, angle brackets and comments. */
-function splitList(value: string): string[] {
+/** Split an address list on commas (and semicolons) outside quotes, angle brackets and comments. */
+export function splitList(value: string): string[] {
   const parts: string[] = [];
   let cur = "";
   let quoted = false;

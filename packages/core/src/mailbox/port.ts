@@ -94,6 +94,8 @@ export interface Mailbox {
   modifyThread(threadId: string, change: LabelChange): Promise<Result<null>>;
   trashThread(threadId: string): Promise<Result<null>>;
   untrashThread(threadId: string): Promise<Result<null>>;
+  /** Send an RFC 5322 message; a threadId keeps a reply in its conversation. */
+  send(raw: string, threadId: string | null): Promise<Result<{ id: string; threadId: string }>>;
 }
 
 export interface LabelChange {

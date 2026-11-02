@@ -97,3 +97,22 @@ describe("GmailMailbox label changes", () => {
     ]);
   });
 });
+
+describe("GmailMailbox.send", () => {
+  it("uploads multipart/related: the threadId as JSON, then the raw message", async () => {
+    let seen: { url: string; type: string; body: string } | undefined;
+    const fetchFn = (async (url: string, init: RequestInit) => {
+      seen = { url, type: (init.headers as Record<string, string>)["content-type"]!, body: String(init.body) };
+      return new Response(JSON.stringify({ id: "s1", threadId: "t1", labelIds: ["SENT"] }), { status: 200 });
+    }) as unknown as typeof fetch;
+    const tokens: TokenSource = { get: async () => ({ ok: true, accessToken: "ya29.t" }) };
+    const r = await new GmailMailbox(tokens, { fetchFn }).send("Subject: hi\r\n\r\nbody", "t1");
+    expect(r).toEqual({ ok: true, value: { id: "s1", threadId: "t1" } });
+    expect(seen!.url).toBe("https://gmail.googleapis.com/upload/gmail/v1/users/me/messages/send?uploadType=multipart");
+    const boundary = /boundary=(\S+)/.exec(seen!.type)![1]!;
+    expect(seen!.type).toBe(`multipart/related; boundary=${boundary}`);
+    expect(seen!.body).toBe(
+      `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n{"threadId":"t1"}\r\n--${boundary}\r\nContent-Type: message/rfc822\r\n\r\nSubject: hi\r\n\r\nbody\r\n--${boundary}--\r\n`,
+    );
+  });
+});
