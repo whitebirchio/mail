@@ -10,7 +10,7 @@ export const SECRETS_PATH = "/mail/production/";
 /** Secrets the Web Function may read, by exact name. */
 export const SECRET_NAMES = ["GOOGLE_CLIENT_SECRET", "SESSION_KEY"] as const;
 /** The Google OAuth client (project whitebirch-mail; a public identifier, its secret is in SSM). */
-export const GOOGLE_CLIENT_ID = "pending.apps.googleusercontent.com";
+export const GOOGLE_CLIENT_ID = "174943855716-689tdmed8h22dasc2fprjh83pl8caju9.apps.googleusercontent.com";
 /** CDK's default bootstrap qualifier; the CI role may only assume these roles. */
 export const CDK_QUALIFIER = "hnb659fds";
 
