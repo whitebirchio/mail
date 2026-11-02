@@ -21,7 +21,12 @@ Do this in [console.cloud.google.com](https://console.cloud.google.com), signed 
    - **Branding:**
      - App name `Mail`;
      - support email and developer contact: the owner's address;
-     - leave the logo and links empty. A logo would trigger brand verification.
+     - **Application home page:** `https://mail.whitebirch.io`;
+     - **Application privacy policy link:** `https://mail.whitebirch.io/privacy` (a public page in the app);
+     - **Authorized domains:** `whitebirch.io`;
+     - leave the logo empty. A logo would trigger brand verification.
+
+     Google requires the home page and privacy policy before an External app can be published.
    - **Audience:** User type **External**.
    - **Data Access → Add or remove scopes.** Add:
      - `openid`;

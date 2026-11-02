@@ -50,7 +50,7 @@ describe("proxy", () => {
   });
 
   it("leaves the sign-in routes open", async () => {
-    for (const p of ["/login", "/auth/start", "/auth/callback", "/auth/logout"]) expect((await proxy(req(p))).status).toBe(200);
+    for (const p of ["/login", "/privacy", "/auth/start", "/auth/callback", "/auth/logout"]) expect((await proxy(req(p))).status).toBe(200);
   });
 
   it("fails closed when misconfigured, naming the variables", async () => {
