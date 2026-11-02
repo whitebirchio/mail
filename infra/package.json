@@ -1,0 +1,27 @@
+{
+  "name": "mail-infra",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Mail infrastructure (AWS CDK v2): certificate, CI deploy role, and the production Web Function behind CloudFront.",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "cdk": "cdk",
+    "synth": "cdk synth --quiet",
+    "diff": "cdk diff MailProduction",
+    "deploy:certs": "cdk deploy MailCerts --exclusively",
+    "deploy:ci": "cdk deploy MailCi --exclusively",
+    "deploy": "cdk deploy MailProduction --require-approval never"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "aws-cdk": "^2.1147.0",
+    "tsx": "^4.23.15",
+    "vitest": "^4.1.12"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.275.0",
+    "constructs": "^10.8.1"
+  }
+}

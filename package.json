@@ -9,11 +9,14 @@
   },
   "workspaces": [
     "packages/*",
-    "apps/*"
+    "apps/*",
+    "infra"
   ],
   "scripts": {
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "test": "npm run test --workspaces --if-present"
+    "test": "npm run test --workspaces --if-present",
+    "synth": "npm run synth -w mail-infra",
+    "deploy": "npm run deploy -w mail-infra"
   },
   "engines": {
     "node": ">=22"

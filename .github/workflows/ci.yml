@@ -1,5 +1,5 @@
-# Gate on every push: secret scan → typecheck → test → build (→ synth, then
-# deploy on main, once infra exists). There's one environment (SPEC.md,
+# Gate on every push: secret scan → typecheck → test → build → synth (then
+# deploy on main, once MailCi exists: T5). There's one environment (SPEC.md,
 # ADR-002), so merging to main ships to the real mailbox; branches only run
 # the gate. The repo is public, so its run logs are too: never echo a secret.
 #
@@ -40,4 +40,7 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
+      # The packaged app is a CDK asset, so build it before synth.
       - run: npm run build -w mail-web
+      # Infra errors fail every branch, not just deploys (no AWS credentials needed to synth).
+      - run: npm run synth
