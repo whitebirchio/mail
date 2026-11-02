@@ -13,6 +13,7 @@
   "dependencies": {
     "@aws-sdk/client-ssm": "^3.1161.0",
     "@mail/core": "*",
+    "lucide-react": "^1.66.0",
     "next": "16.4.4",
     "react": "19.3.1",
     "react-dom": "19.3.1",

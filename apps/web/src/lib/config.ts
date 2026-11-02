@@ -15,6 +15,12 @@ export interface AppConfig {
   googleClientSecret: string;
   /** 32 random bytes; the session and OAuth-cookie keys are derived from it. */
   sessionKey: Uint8Array;
+  /**
+   * Local UI work only: skip sign-in and use an in-memory mailbox of invented
+   * mail. Only under `next dev` (NODE_ENV=development) with MAIL_DEV_FAKE=1;
+   * production builds inline NODE_ENV, so this is dead code there.
+   */
+  devFake: boolean;
 }
 
 export type ConfigResult = { ok: true; config: AppConfig } | { ok: false; problems: string[] };
@@ -66,7 +72,14 @@ export function parseConfig(env: NodeJS.ProcessEnv, secrets: Record<string, stri
   const v = values as { [K in keyof typeof fields]: z.output<(typeof fields)[K]> };
   return {
     ok: true,
-    config: { appUrl: v.APP_URL, ownerEmail: v.OWNER_EMAIL, googleClientId: v.GOOGLE_CLIENT_ID, googleClientSecret: v.GOOGLE_CLIENT_SECRET, sessionKey: v.SESSION_KEY },
+    config: {
+      appUrl: v.APP_URL,
+      ownerEmail: v.OWNER_EMAIL,
+      googleClientId: v.GOOGLE_CLIENT_ID,
+      googleClientSecret: v.GOOGLE_CLIENT_SECRET,
+      sessionKey: v.SESSION_KEY,
+      devFake: env.NODE_ENV === "development" && env.MAIL_DEV_FAKE === "1",
+    },
   };
 }
 

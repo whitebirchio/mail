@@ -1,8 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
+// No title here: the signed-in layout sets "Inbox (N) · Mail", and React
+// would otherwise render two <title>s (the first wins).
 export const metadata: Metadata = {
-  title: "Mail",
   description: "Mail",
   robots: { index: false, follow: false },
 };

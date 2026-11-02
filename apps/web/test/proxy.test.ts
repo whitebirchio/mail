@@ -60,3 +60,14 @@ describe("proxy", () => {
     expect(await res.text()).toContain("GOOGLE_CLIENT_SECRET");
   });
 });
+
+describe("proxy and attachments", () => {
+  it("leaves an attachment's own sandbox CSP in place, but still requires a session", async () => {
+    expect((await proxy(req("/attachments/m1/1"))).status).toBe(302);
+    const token = await sealSession(newSession("owner@example.com", "1//0test", nowS()), key);
+    const res = await proxy(req("/attachments/m1/1", token));
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-security-policy")).toBeNull();
+    expect(res.headers.get("x-content-type-options")).toBe("nosniff");
+  });
+});

@@ -24,3 +24,16 @@ describe("config", () => {
     expect(r).toEqual({ ok: false, problems: ["APP_URL", "GOOGLE_CLIENT_ID"] });
   });
 });
+
+describe("dev fake mode", () => {
+  it("is on only under next dev with MAIL_DEV_FAKE=1", () => {
+    const on = (env: Record<string, string>) => {
+      const r = parseConfig({ ...ENV, ...env } as unknown as NodeJS.ProcessEnv, SECRETS);
+      return r.ok && r.config.devFake;
+    };
+    expect(on({ NODE_ENV: "development", MAIL_DEV_FAKE: "1" })).toBe(true);
+    expect(on({ NODE_ENV: "production", MAIL_DEV_FAKE: "1" })).toBe(false);
+    expect(on({ NODE_ENV: "test", MAIL_DEV_FAKE: "1" })).toBe(false);
+    expect(on({ NODE_ENV: "development" })).toBe(false);
+  });
+});

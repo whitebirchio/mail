@@ -17,5 +17,9 @@ export default function config(phase: string): NextConfig {
     turbopack: { root },
     transpilePackages: ["@mail/core"],
     poweredByHeader: false,
+    // Behind CloudFront the function sees its own Host, so Next's Server
+    // Action check must be told the public origin. Every action also checks
+    // Origin itself (lib/origin.ts).
+    experimental: { serverActions: { allowedOrigins: ["mail.whitebirch.io"] } },
   };
 }
