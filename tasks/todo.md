@@ -14,7 +14,7 @@
 
 ## M1: signed-in shell, live
 
-- [ ] T1: Repo scaffold
+- [x] T1: Repo scaffold — 2026-11-02; CI's first green run waits for the GitHub repo
   - **Build:**
     - `git init`; npm workspaces (`packages/core` = `@mail/core`, `apps/web` = `mail-web`, `infra` = `mail-infra`); `tsconfig.base.json`; `typescript@6.0.3` pinned; vitest 4 in each workspace; `.nvmrc` (22).
     - `.gitignore`, covering `.env*`, `.next`, `dist`, `cdk.out` and `node_modules`.
@@ -28,7 +28,7 @@
   - **Verify:** run the gate locally, and check the Actions run on GitHub.
   - **Files:** root `package.json`, `tsconfig.base.json`, `.gitignore`, `.gitleaks.toml`, `ci.yml`, workspace `package.json`s, ADRs.
 
-- [ ] T2: Config and the encrypted session
+- [x] T2: Config and the encrypted session — 2026-11-02
   - **Build:**
     - `apps/web/src/lib/config.ts`: Zod. `APP_URL`, `OWNER_EMAIL`, `GOOGLE_CLIENT_ID`, `SECRETS_PATH`, then SSM loading of `GOOGLE_CLIENT_SECRET` and `SESSION_KEY`. Locally, these come from `.env`.
     - `session.ts`:
@@ -42,7 +42,7 @@
   - **Verify:** `npm test -w mail-web`.
   - **Files:** `src/lib/config.ts`, `src/lib/session.ts`, `test/session.test.ts`, `test/config.test.ts`.
 
-- [ ] T3: Google sign-in, `proxy.ts`, login and logout
+- [x] T3: Google sign-in, `proxy.ts`, login and logout — 2026-11-02; real Google sign-in waits for step S
   - **Build:**
     - `oidc.ts`, ported from Trader. Scopes are `openid email gmail.modify`, with `access_type=offline` and `prompt=consent select_account`.
     - The callback requires a `refresh_token`. Owner-only.
@@ -56,7 +56,7 @@
   - **Verify:** `npm test -w mail-web`. Then `npm run dev -w mail-web`: sign in at localhost as the owner (works), then as another account (403). Sign out, and the grant is gone from Google Account → Third-party connections.
   - **Files:** `src/lib/oidc.ts`, `src/proxy.ts`, `src/app/auth/*/route.ts`, `src/app/login/page.tsx`, `test/auth.test.ts`.
 
-- [ ] T4: Infra
+- [x] T4: Infra — 2026-11-02; MailCi waits for the repo's OIDC subject; GOOGLE_CLIENT_ID is a placeholder
   - **Build:**
     - `infra/lib/config.ts`: domain, owner, client id, and the GitHub OIDC subject from `gh api` repo/org ids.
     - `certs-stack.ts` (`MailCerts`): an ACM certificate for `mail.whitebirch.io`.
@@ -102,7 +102,7 @@
 
 ## M2: read
 
-- [ ] T6: Core: tokens, the Mailbox port, and listing
+- [x] T6: Core: tokens, the Mailbox port, and listing — 2026-11-02
   - **Build:**
     - `google/token.ts`: refresh → access token, an in-memory cache keyed by `sha256(refreshToken)`, expiring 60 s early.
     - `mailbox/port.ts`.
@@ -119,7 +119,7 @@
   - **Verify:** `npm test -w @mail/core`.
   - **Files:** `src/google/token.ts`, `src/mailbox/{port,gmail,fake}.ts`, `src/views/thread-list.ts`, `test/*`.
 
-- [ ] T7: UI: sidebar, thread list and search
+- [x] T7: UI: sidebar, thread list and search — 2026-11-02, against the dev fake; real-inbox parity (SC-3) waits for T5
   - **Build:**
     - The `(signed-in)` layout, with a sidebar: Inbox (unread), Starred, Sent, Drafts, All Mail, Spam, Trash, and user labels.
     - `[label]/page.tsx`, supporting `?q=` and `?page=`.
@@ -135,7 +135,7 @@
   - **Verify:** run locally against the real inbox, side by side with Gmail on a phone. Then deploy and check the timing in the network panel.
   - **Files:** `src/app/(signed-in)/layout.tsx`, `[label]/page.tsx`, `src/components/{sidebar,thread-list,local-time}.tsx`, `src/lib/gmail.ts`.
 
-- [ ] T8: Core: MIME parse and the thread view model
+- [x] T8: Core: MIME parse and the thread view model — 2026-11-02
   - **Build:**
     - `message/parse.ts`: walks the payload tree; handles multipart/alternative, mixed and nested related; QP and base64; non-UTF-8 charsets (`TextDecoder`); RFC 2047 headers; tells attachments apart from inline `cid:` parts.
     - `GmailMailbox.getThread` (format=full).
@@ -144,7 +144,7 @@
   - **Verify:** `npm test -w @mail/core`.
   - **Files:** `src/message/parse.ts`, `src/mailbox/gmail.ts`, `src/views/thread.ts`, `test/parse.test.ts`, `test/fixtures/*`.
 
-- [ ] T9: Core: sanitize
+- [x] T9: Core: sanitize — 2026-11-02
   - **Build:** `message/sanitize.ts`, using `sanitize-html` or similar (record the dependency in the commit). It:
     - strips scripts, `on*` handlers, `javascript:` and non-image `data:` URLs, forms, iframes, objects, `<base>`, `<meta http-equiv>`, and dangerous CSS;
     - rewrites `cid:` to `/attachments/<msg>/<att>`;
@@ -155,7 +155,7 @@
   - **Verify:** `npm test -w @mail/core`.
   - **Files:** `src/message/sanitize.ts`, `test/sanitize.test.ts`, `test/fixtures/xss/*`.
 
-- [ ] T10: UI: thread view and attachments
+- [x] T10: UI: thread view and attachments — 2026-11-02, against the dev fake; live checks (SC-2, SC-4) wait for T5
   - **Build:**
     - `t/[threadId]/page.tsx`.
     - A `<MessageFrame>`: a sandboxed iframe (`allow-same-origin allow-popups allow-popups-to-escape-sandbox`, never `allow-scripts`) with a parent-side autosizer.
@@ -180,7 +180,7 @@
 
 ## M3: triage
 
-- [ ] T11: Core: triage verbs
+- [x] T11: Core: triage verbs — 2026-11-02; whether Gmail keeps INBOX on trash is checked live in T12
   - **Build:**
     - `actions.ts`: `Triage` verbs → label changes, or trash/untrash; `inverse()`; `triage()` returns `{ ok, undo }`.
     - `GmailMailbox.modifyThreads`, using `threads.modify` (`batchModify` is messages-only), with bounded concurrency for bulk.
@@ -188,7 +188,7 @@
   - **Verify:** `npm test -w @mail/core`.
   - **Files:** `src/actions.ts`, `src/mailbox/{gmail,fake}.ts`, `test/actions.test.ts`.
 
-- [ ] T12: UI: triage
+- [x] T12: UI: triage — 2026-11-02, against the dev fake (npm run smoke); live SC-5 waits for T5
   - **Build:**
     - A thread toolbar: archive / inbox, read / unread, star, trash / untrash, spam / not spam.
     - List checkboxes with a bulk toolbar.
@@ -210,7 +210,7 @@
 
 ## M4: compose
 
-- [ ] T13: Core: compose and send
+- [x] T13: Core: compose and send — 2026-11-02
   - **Build:** `message/compose.ts` covers:
     - reply-all recipients (own address removed, de-duplicated, Cc kept);
     - `In-Reply-To`/`References`, and `Re:`/`Fwd:` without doubling;
@@ -224,7 +224,7 @@
   - **Verify:** `npm test -w @mail/core`.
   - **Files:** `src/message/compose.ts`, `src/mailbox/gmail.ts`, `test/compose.test.ts`.
 
-- [ ] T14: UI: compose
+- [x] T14: UI: compose — 2026-11-02, against the dev fake; live SC-6 waits for T5
   - **Build:**
     - `compose/page.tsx` (`?mode=new|reply|replyAll|forward&messageId=`), with prefilled To/Cc/Bcc/Subject and the quoted body.
     - Reply / reply-all / forward buttons on each message, and a Compose button.
@@ -244,7 +244,7 @@
 
 ## M5: polish
 
-- [ ] T15: Keyboard shortcuts (first to cut)
+- [x] T15: Keyboard shortcuts (first to cut) — 2026-11-02
   - **Build:** a single client `useShortcuts` hook: `j`/`k`, `o`/Enter, `e`, `#`, `s`, `Shift+U`/`Shift+I`, `r`/`a`/`f`, `c`, `/`, `u`, and `?` for a help overlay. It's off while focus is in a text field.
   - **Acceptance:** each key triggers the same path as the button it mirrors. Nothing fires while typing.
   - **Verify:** a manual run-through, and a unit test of the keymap.

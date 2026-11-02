@@ -14,6 +14,13 @@
 > - Add **keyboard shortcuts** if they're cheap to add.
 > - Make the repo **public**.
 
+> **Build notes (2026-11-02):** changes made while building, none of them to scope.
+> - **Next 16.4.4, not Trader's 16.2.10.** npm audit flags 16.2.10 critical, including a Proxy bypass under Turbopack, and `proxy.ts` is our auth gate.
+> - **The list's attachment marker is a hint.** Gmail's metadata format has no part list, so a row shows a paperclip when a message is `multipart/mixed`. SC-3 checks it against Gmail, and some mismatches are expected.
+> - **The CI deploy role trusts only `main`** (Trader's trusts every branch), since only `main` deploys here.
+> - **A dev-only fake mailbox** (`MAIL_DEV_FAKE=1` under `next dev`) and a browser smoke test (`npm run smoke`) let the UI be built and checked without a Google client. Production builds compile the fake out.
+> - **Sending reads your display name from Gmail's send-as settings** (`sendAs.list`, covered by `gmail.modify`; no new scope).
+
 ## Objective
 
 Scott's work network blocks gmail.com. Mail is a small, single-user web client for **scott.schmalz@gmail.com**, served from `mail.whitebirch.io`. The browser only ever talks to `mail.whitebirch.io`. The server calls the Gmail API for it and passes the results through.
@@ -305,7 +312,7 @@ export async function triageAction(threadIds: string[], verb: Triage) {
    - Any other Google account gets 403.
    - The raw Web Function URL refuses direct requests (403).
 2. **No Google in the browser.** After sign-in, a full session (list, search, open, attachments, triage, send) makes **no browser requests** to `*.google.com`, `*.googleapis.com`, `*.gstatic.com` or `gmail.com`, as the DevTools network log shows. Remote images in a message are the one exception, and only after "Show images".
-3. **Inbox parity.** The first page of the inbox matches Gmail's order, unread state, stars and attachment markers. Labels, Starred, Sent, Spam and Trash list the same threads Gmail does. A Gmail-syntax search returns the same threads as the same search in Gmail.
+3. **Inbox parity.** The first page of the inbox matches Gmail's order, unread state and stars. Attachment markers match too, apart from the known multipart/mixed mismatches (see Build notes). Labels, Starred, Sent, Spam and Trash list the same threads Gmail does. A Gmail-syntax search returns the same threads as the same search in Gmail.
 4. **Reading.**
    - A newsletter, a receipt, a plain-text email and a message with an inline image all render correctly.
    - A message containing `<script>` and `onerror=` runs nothing.
