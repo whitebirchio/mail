@@ -20,4 +20,4 @@ export const CDK_QUALIFIER = "hnb659fds";
  * renamed or re-created "mail" repo can't inherit deploy rights. null until
  * the repo exists; MailCi isn't synthesized without it.
  */
-export const GITHUB_OIDC_SUBJECT_PREFIX: string | null = null;
+export const GITHUB_OIDC_SUBJECT_PREFIX: string | null = "repo:whitebirchio@104479267/mail@1443366386";
