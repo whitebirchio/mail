@@ -1,5 +1,6 @@
-# Gate on every push: secret scan → typecheck → test → build → synth (then
-# deploy on main, once MailCi exists: T5). There's one environment (SPEC.md,
+# Gate on every push: secret scan → typecheck → test → build → synth; then,
+# on main only, deploy MailProduction through GitHub OIDC (no stored AWS
+# keys). The mail-github-deploy role trusts only main's OIDC subject. There's one environment (SPEC.md,
 # ADR-002), so merging to main ships to the real mailbox; branches only run
 # the gate. The repo is public, so its run logs are too: never echo a secret.
 #
@@ -9,6 +10,7 @@ name: CI
 
 permissions:
   contents: read
+  id-token: write # OIDC token for aws-actions/configure-aws-credentials
 
 on:
   push:
@@ -44,3 +46,27 @@ jobs:
       - run: npm run build -w mail-web
       # Infra errors fail every branch, not just deploys (no AWS credentials needed to synth).
       - run: npm run synth
+
+  deploy:
+    needs: build
+    # Dormant until MailCi is deployed and the repo variable is set (docs/SETUP.md §3).
+    if: github.ref == 'refs/heads/main' && vars.AWS_DEPLOY_ROLE_ARN != ''
+    runs-on: ubuntu-latest
+    # Queue rather than cancel: a half-finished deploy is worse than a late one.
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: us-east-1
+      - run: npm run build -w mail-web
+      - name: Deploy MailProduction (AWS)
+        run: npm run deploy -w mail-infra
