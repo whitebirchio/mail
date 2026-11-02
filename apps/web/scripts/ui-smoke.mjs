@@ -24,7 +24,13 @@ page.on("request", (r) => {
   if (host !== "localhost" && host !== "127.0.0.1") offsite.push(r.url());
 });
 const dialogs = [];
+const leaveGuards = [];
 page.on("dialog", async (d) => {
+  // The compose form's leave guard is expected; any other dialog would mean script ran.
+  if (d.type() === "beforeunload") {
+    leaveGuards.push(page.url());
+    return d.accept();
+  }
   dialogs.push(d.message());
   await d.dismiss();
 });
@@ -107,7 +113,37 @@ try {
   await page.waitForURL(/\/t\/th-lunch/);
   check("send returns to where you came from", true);
 
-  // Search
+  // Keyboard
+  await page.goto(`${BASE}/inbox`);
+  await page.getByRole("heading", { name: "Inbox" }).waitFor();
+  await page.keyboard.press("?");
+  check("? opens the shortcut help", await page.getByRole("dialog", { name: "Keyboard shortcuts" }).isVisible());
+  await page.keyboard.press("Escape");
+  const before = await page.locator("main ul > li").count();
+  await page.keyboard.press("e");
+  await page.waitForTimeout(500);
+  check("e with nothing focused or selected does nothing", (await page.locator("main ul > li").count()) === before);
+  await page.keyboard.press("j");
+  await page.keyboard.press("j");
+  const second = await page.evaluate(() => document.activeElement?.closest("li")?.innerText ?? "");
+  check("j moves down the list", second.length > 0 && second === (await page.locator("main ul > li").nth(1).innerText()));
+  await page.keyboard.press("x");
+  check("x selects the focused row", await page.getByText("1 selected").isVisible());
+  await page.keyboard.press("x");
+  await page.keyboard.press("o");
+  await page.waitForURL(/\/t\//);
+  await page.getByRole("toolbar", { name: "Conversation actions" }).waitFor();
+  await page.keyboard.press("u");
+  await page.waitForURL(/\/inbox/);
+  check("o opens and u goes back", true);
+  await page.keyboard.press("c");
+  await page.waitForURL(/\/compose/);
+  await page.keyboard.type("typed into To, not a shortcut e#");
+  check("keys typed in a field aren't shortcuts", (await page.getByLabel("To", { exact: true }).inputValue()).endsWith("e#"));
+
+  // Search (leaving the compose form above, which has unsent text, so its leave guard asks)
+  await page.goto(`${BASE}/inbox`);
+  check("leaving unsent text asks first", leaveGuards.some((u) => u.includes("/compose")));
   await page.getByRole("searchbox", { name: "Search mail" }).fill("Photos");
   await page.getByRole("searchbox", { name: "Search mail" }).press("Enter");
   await page.getByRole("heading", { name: /Results for/ }).waitFor();

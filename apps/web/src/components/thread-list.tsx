@@ -9,24 +9,24 @@ import { useToast } from "./toast";
 import { runTriage } from "./triage";
 
 type Kind = "inbox" | "spam" | "trash" | "other";
-type Action = { verb: Triage; label: string; icon: React.ComponentType<{ className?: string }> };
+type Action = { verb: Triage; label: string; icon: React.ComponentType<{ className?: string }>; key?: string };
 
 /** The bulk toolbar's verbs for each kind of list. */
 const BULK: Record<Kind, Action[]> = {
   inbox: [
-    { verb: "archive", label: "Archive", icon: Archive },
-    { verb: "spam", label: "Report spam", icon: AlertOctagon },
-    { verb: "trash", label: "Delete", icon: Trash2 },
+    { verb: "archive", label: "Archive", icon: Archive, key: "e" },
+    { verb: "spam", label: "Report spam", icon: AlertOctagon, key: "!" },
+    { verb: "trash", label: "Delete", icon: Trash2, key: "#" },
   ],
   spam: [
     { verb: "notSpam", label: "Not spam", icon: ShieldCheck },
-    { verb: "trash", label: "Delete", icon: Trash2 },
+    { verb: "trash", label: "Delete", icon: Trash2, key: "#" },
   ],
   trash: [{ verb: "untrash", label: "Restore", icon: RotateCcw }],
   other: [
     { verb: "inbox", label: "Move to Inbox", icon: Inbox },
-    { verb: "archive", label: "Archive", icon: Archive },
-    { verb: "trash", label: "Delete", icon: Trash2 },
+    { verb: "archive", label: "Archive", icon: Archive, key: "e" },
+    { verb: "trash", label: "Delete", icon: Trash2, key: "#" },
   ],
 };
 
@@ -56,7 +56,6 @@ export function ThreadList({ rows, kind, inSent, back, emptyText }: { rows: Thre
       const r = await runTriage(ids, verb, toast, { undoable: REMOVES_FROM_VIEW.has(verb) });
       if (r.ok) setSelected(new Set());
     });
-  const anyUnread = rows.some((r) => chosen.includes(r.id) && r.unread);
 
   if (rows.length === 0) return <p className="px-4 py-16 text-center text-sm text-[var(--muted)]">{emptyText}</p>;
 
@@ -76,12 +75,15 @@ export function ThreadList({ rows, kind, inSent, back, emptyText }: { rows: Thre
         {chosen.length > 0 && (
           <>
             {BULK[kind].map((a) => (
-              <IconButton key={a.verb} label={a.label} disabled={pending} onClick={() => act(chosen, a.verb)}>
+              <IconButton key={a.verb} label={a.label} shortcut={a.key} disabled={pending} onClick={() => act(chosen, a.verb)}>
                 <a.icon className="size-4" />
               </IconButton>
             ))}
-            <IconButton label={anyUnread ? "Mark as read" : "Mark as unread"} disabled={pending} onClick={() => act(chosen, anyUnread ? "read" : "unread")}>
-              {anyUnread ? <MailOpen className="size-4" /> : <Mail className="size-4" />}
+            <IconButton label="Mark as read" shortcut="I" disabled={pending} onClick={() => act(chosen, "read")}>
+              <MailOpen className="size-4" />
+            </IconButton>
+            <IconButton label="Mark as unread" shortcut="U" disabled={pending} onClick={() => act(chosen, "unread")}>
+              <Mail className="size-4" />
             </IconButton>
             <span className="ml-2 text-xs text-[var(--muted)]">{chosen.length} selected</span>
           </>
@@ -142,6 +144,7 @@ function Row({
         className="relative z-10 rounded-full p-1.5 hover:bg-[var(--surface)]"
         aria-pressed={row.starred}
         aria-label={row.starred ? "Unstar" : "Star"}
+        data-shortcut="s"
         disabled={pending}
         onClick={() => act([row.id], row.starred ? "unstar" : "star")}
       >
@@ -165,16 +168,16 @@ function Row({
       </Link>
       <div className="absolute right-2 z-10 hidden items-center gap-0.5 md:group-hover:flex">
         {quick && (
-          <IconButton label={quick.label} disabled={pending} onClick={() => act([row.id], quick.verb)}>
+          <IconButton label={quick.label} shortcut={quick.verb === "archive" ? "e" : undefined} disabled={pending} onClick={() => act([row.id], quick.verb)}>
             <quick.Icon className="size-4" />
           </IconButton>
         )}
         {kind !== "trash" && (
-          <IconButton label="Delete" disabled={pending} onClick={() => act([row.id], "trash")}>
+          <IconButton label="Delete" shortcut="#" disabled={pending} onClick={() => act([row.id], "trash")}>
             <Trash2 className="size-4" />
           </IconButton>
         )}
-        <IconButton label={row.unread ? "Mark as read" : "Mark as unread"} disabled={pending} onClick={() => act([row.id], row.unread ? "read" : "unread")}>
+        <IconButton label={row.unread ? "Mark as read" : "Mark as unread"} shortcut={row.unread ? "I" : "U"} disabled={pending} onClick={() => act([row.id], row.unread ? "read" : "unread")}>
           {row.unread ? <MailOpen className="size-4" /> : <Mail className="size-4" />}
         </IconButton>
       </div>
@@ -182,9 +185,9 @@ function Row({
   );
 }
 
-export function IconButton({ label, onClick, disabled, children }: { label: string; onClick: () => void; disabled?: boolean; children: React.ReactNode }) {
+export function IconButton({ label, onClick, disabled, shortcut, children }: { label: string; onClick: () => void; disabled?: boolean; shortcut?: string; children: React.ReactNode }) {
   return (
-    <button type="button" aria-label={label} title={label} disabled={disabled} onClick={onClick} className="rounded-full p-2 text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--text)] disabled:opacity-50">
+    <button type="button" aria-label={label} title={shortcut ? `${label} (${shortcut})` : label} data-shortcut={shortcut} disabled={disabled} onClick={onClick} className="rounded-full p-2 text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--text)] disabled:opacity-50">
       {children}
     </button>
   );

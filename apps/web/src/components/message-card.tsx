@@ -92,18 +92,19 @@ export function MessageCard({ m, subject }: { m: MessageCardData; subject: strin
 
       {!m.draft && (
         <div className="mt-3 flex flex-wrap gap-2">
-          <ComposeLink href={m.compose.reply} icon={<Reply className="size-4" aria-hidden />} label="Reply" />
-          {m.canReplyAll && <ComposeLink href={m.compose.replyAll} icon={<ReplyAll className="size-4" aria-hidden />} label="Reply all" />}
-          <ComposeLink href={m.compose.forward} icon={<Forward className="size-4" aria-hidden />} label="Forward" />
+          <ComposeLink href={m.compose.reply} icon={<Reply className="size-4" aria-hidden />} label="Reply" shortcut="r" />
+          {/* Without reply-all, "a" falls back to a plain reply. */}
+          <ComposeLink href={m.canReplyAll ? m.compose.replyAll : m.compose.reply} icon={<ReplyAll className="size-4" aria-hidden />} label="Reply all" shortcut="a" hidden={!m.canReplyAll} />
+          <ComposeLink href={m.compose.forward} icon={<Forward className="size-4" aria-hidden />} label="Forward" shortcut="f" />
         </div>
       )}
     </li>
   );
 }
 
-function ComposeLink({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
+function ComposeLink({ href, icon, label, shortcut, hidden = false }: { href: string; icon: React.ReactNode; label: string; shortcut: string; hidden?: boolean }) {
   return (
-    <Link href={href} className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] px-4 py-1.5 text-sm hover:bg-[var(--surface)]">
+    <Link href={href} data-shortcut={shortcut} title={`${label} (${shortcut})`} hidden={hidden} className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] px-4 py-1.5 text-sm hover:bg-[var(--surface)]">
       {icon}
       {label}
     </Link>

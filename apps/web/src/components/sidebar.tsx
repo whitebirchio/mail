@@ -65,6 +65,8 @@ export function ComposeButton({ className = "" }: { className?: string }) {
   return (
     <Link
       href="/compose?mode=new"
+      data-shortcut="c"
+      title="Compose (c)"
       className={`inline-flex items-center gap-2 rounded-2xl bg-[var(--accent-soft)] px-5 py-3 text-sm font-semibold shadow-sm hover:shadow ${className}`}
     >
       <PenSquare className="size-4" aria-hidden />

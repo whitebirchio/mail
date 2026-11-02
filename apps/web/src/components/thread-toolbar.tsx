@@ -27,50 +27,51 @@ export function ThreadToolbar({ threadId, labelIds, back, after }: { threadId: s
 
   return (
     <div role="toolbar" aria-label="Conversation actions" className="sticky top-14 z-20 flex h-12 items-center gap-1 border-b border-[var(--border)] bg-[var(--background)] px-2" aria-busy={pending}>
-      <Link href={back} aria-label="Back to list" title="Back to list" className="rounded-full p-2 text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--text)]">
+      <Link href={back} aria-label="Back to list" title="Back to list (u)" data-shortcut="u" className="rounded-full p-2 text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--text)]">
         <ArrowLeft className="size-4" />
       </Link>
       <span className="mx-1 h-5 w-px bg-[var(--border)]" aria-hidden />
       {has("TRASH") ? (
-        <IconButton label="Restore" disabled={pending} onClick={() => act("untrash", "next")}>
+        <IconButton label="Restore" shortcut="e" disabled={pending} onClick={() => act("untrash", "next")}>
           <RotateCcw className="size-4" />
         </IconButton>
       ) : (
         <>
           {has("INBOX") ? (
-            <IconButton label="Archive" disabled={pending} onClick={() => act("archive", "next")}>
+            <IconButton label="Archive" shortcut="e" disabled={pending} onClick={() => act("archive", "next")}>
               <Archive className="size-4" />
             </IconButton>
           ) : (
             !has("SPAM") && (
-              <IconButton label="Move to Inbox" disabled={pending} onClick={() => act("inbox", "stay", false)}>
+              <IconButton label="Move to Inbox" shortcut="e" disabled={pending} onClick={() => act("inbox", "stay", false)}>
                 <Inbox className="size-4" />
               </IconButton>
             )
           )}
           {has("SPAM") ? (
-            <IconButton label="Not spam" disabled={pending} onClick={() => act("notSpam", "next")}>
+            <IconButton label="Not spam" shortcut="!" disabled={pending} onClick={() => act("notSpam", "next")}>
               <ShieldCheck className="size-4" />
             </IconButton>
           ) : (
-            <IconButton label="Report spam" disabled={pending} onClick={() => act("spam", "next")}>
+            <IconButton label="Report spam" shortcut="!" disabled={pending} onClick={() => act("spam", "next")}>
               <AlertOctagon className="size-4" />
             </IconButton>
           )}
-          <IconButton label="Delete" disabled={pending} onClick={() => act("trash", "next")}>
+          <IconButton label="Delete" shortcut="#" disabled={pending} onClick={() => act("trash", "next")}>
             <Trash2 className="size-4" />
           </IconButton>
         </>
       )}
       <span className="mx-1 h-5 w-px bg-[var(--border)]" aria-hidden />
-      <IconButton label="Mark as unread" disabled={pending} onClick={() => act("unread", "back", false)}>
+      <IconButton label="Mark as unread" shortcut="U" disabled={pending} onClick={() => act("unread", "back", false)}>
         <Mail className="size-4" />
       </IconButton>
       <button
         type="button"
         aria-pressed={has("STARRED")}
         aria-label={has("STARRED") ? "Unstar" : "Star"}
-        title={has("STARRED") ? "Unstar" : "Star"}
+        title={has("STARRED") ? "Unstar (s)" : "Star (s)"}
+        data-shortcut="s"
         disabled={pending}
         onClick={() => act(has("STARRED") ? "unstar" : "star", "stay", false)}
         className="rounded-full p-2 hover:bg-[var(--surface)] disabled:opacity-50"
