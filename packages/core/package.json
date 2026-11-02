@@ -16,9 +16,11 @@
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
+    "@types/sanitize-html": "^2.16.2",
     "vitest": "^4.1.12"
   },
   "dependencies": {
+    "sanitize-html": "^2.18.1",
     "zod": "^4.6.7"
   }
 }
