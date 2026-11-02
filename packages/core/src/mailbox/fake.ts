@@ -5,6 +5,7 @@ import {
   type FullMessage,
   type FullThread,
   type Label,
+  type LabelChange,
   type Mailbox,
   type MailboxError,
   type Result,
@@ -79,5 +80,44 @@ export class FakeMailbox implements Mailbox {
     const part = m?.payload ? findPart(m.payload, partId) : null;
     if (!part) return fail("not-found");
     return ok({ filename: part.filename, mimeType: part.mimeType, bytes: new Uint8Array(Buffer.from(part.body.data ?? "", "base64url")) });
+  }
+
+  /** Every label-changing call, in order, for assertions. */
+  calls: { op: "modify" | "trash" | "untrash"; threadId: string; change?: LabelChange }[] = [];
+
+  private relabel(threadId: string, fn: (labels: Set<string>) => void): Result<null> {
+    const t = this.threads.find((x) => x.id === threadId);
+    if (!t) return fail("not-found");
+    for (const m of t.messages) {
+      const labels = new Set(m.labelIds);
+      fn(labels);
+      m.labelIds = [...labels];
+    }
+    return ok(null);
+  }
+
+  async modifyThread(threadId: string, change: LabelChange): Promise<Result<null>> {
+    const f = this.failing<null>();
+    if (f) return f;
+    this.calls.push({ op: "modify", threadId, change });
+    return this.relabel(threadId, (l) => {
+      for (const r of change.remove) l.delete(r);
+      for (const a of change.add) l.add(a);
+    });
+  }
+
+  // Like Gmail: trash adds TRASH and keeps the other labels; untrash removes it.
+  async trashThread(threadId: string): Promise<Result<null>> {
+    const f = this.failing<null>();
+    if (f) return f;
+    this.calls.push({ op: "trash", threadId });
+    return this.relabel(threadId, (l) => void l.add("TRASH"));
+  }
+
+  async untrashThread(threadId: string): Promise<Result<null>> {
+    const f = this.failing<null>();
+    if (f) return f;
+    this.calls.push({ op: "untrash", threadId });
+    return this.relabel(threadId, (l) => void l.delete("TRASH"));
   }
 }

@@ -8,3 +8,4 @@ export * from "./views/thread-list";
 export * from "./message/sanitize";
 export * from "./message/parse";
 export * from "./views/thread";
+export * from "./actions";

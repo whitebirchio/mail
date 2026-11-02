@@ -90,4 +90,13 @@ export interface Mailbox {
   getThread(threadId: string): Promise<Result<FullThread>>;
   /** A part's bytes, by the message and the part's partId (inline or stored as an attachment). */
   getAttachment(messageId: string, partId: string): Promise<Result<AttachmentData>>;
+  /** Add and remove labels on every message in a thread. */
+  modifyThread(threadId: string, change: LabelChange): Promise<Result<null>>;
+  trashThread(threadId: string): Promise<Result<null>>;
+  untrashThread(threadId: string): Promise<Result<null>>;
+}
+
+export interface LabelChange {
+  add: string[];
+  remove: string[];
 }

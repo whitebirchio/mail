@@ -6,6 +6,7 @@ import {
   type AttachmentData,
   type FullThread,
   type Label,
+  type LabelChange,
   type Mailbox,
   type MailboxError,
   type Part,
@@ -161,6 +162,25 @@ export class GmailMailbox implements Mailbox {
       data = att.value.data;
     }
     return ok({ filename: part.filename, mimeType: part.mimeType || "application/octet-stream", bytes: new Uint8Array(Buffer.from(data ?? "", "base64url")) });
+  }
+
+  async modifyThread(threadId: string, change: LabelChange): Promise<Result<null>> {
+    const r = await this.post("threads.modify", `/threads/${encodeURIComponent(threadId)}/modify`, { addLabelIds: change.add, removeLabelIds: change.remove });
+    return r.ok ? ok(null) : r;
+  }
+
+  async trashThread(threadId: string): Promise<Result<null>> {
+    const r = await this.post("threads.trash", `/threads/${encodeURIComponent(threadId)}/trash`);
+    return r.ok ? ok(null) : r;
+  }
+
+  async untrashThread(threadId: string): Promise<Result<null>> {
+    const r = await this.post("threads.untrash", `/threads/${encodeURIComponent(threadId)}/untrash`);
+    return r.ok ? ok(null) : r;
+  }
+
+  private post(endpoint: string, path: string, body?: unknown): Promise<Result<Response>> {
+    return this.send(endpoint, path, { method: "POST", ...(body === undefined ? {} : { headers: { "content-type": "application/json" }, body: JSON.stringify(body) }) });
   }
 
   /** One Gmail call: auth, retries, status mapping and validation. */
