@@ -1,0 +1,24 @@
+{
+  "name": "mail",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Mail: a small single-user web client for one Gmail account, served from mail.whitebirch.io (SPEC.md).",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/whitebirchio/mail.git"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "typescript": "6.0.3"
+  }
+}

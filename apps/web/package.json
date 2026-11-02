@@ -1,0 +1,27 @@
+{
+  "name": "mail-web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Mail's web app (SPEC.md): Next.js on a Lambda Web Function behind CloudFront. A thin shell over @mail/core.",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@mail/core": "*",
+    "next": "16.4.4",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.0",
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "tailwindcss": "^4.1.0",
+    "vitest": "^4.1.12"
+  }
+}

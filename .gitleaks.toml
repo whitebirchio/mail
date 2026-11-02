@@ -1,0 +1,27 @@
+# gitleaks config: CI scans all of history on every push (ci.yml), and a hit
+# fails the build before any deploy. The repo is public, so a secret in any
+# commit is a leak.
+#
+#   gitleaks git .        # history, same as CI
+#   gitleaks dir .        # working tree (also reports gitignored files like .env)
+
+[extend]
+useDefault = true
+
+# Google OAuth client secrets ("GOCSPX-…") and refresh tokens ("1//…").
+[[rules]]
+id = "google-oauth-client-secret"
+description = "Google OAuth client secret"
+regex = '''GOCSPX-[A-Za-z0-9_-]{20,}'''
+keywords = ["GOCSPX-"]
+
+[[rules]]
+id = "google-refresh-token"
+description = "Google OAuth refresh token"
+regex = '''\b1//0[A-Za-z0-9_-]{30,}'''
+keywords = ["1//0"]
+
+# Obvious placeholders in test fixtures and docs.
+[[allowlists]]
+regexTarget = "match"
+regexes = ['''GOCSPX-(test|fake|secret)[A-Za-z0-9_-]*''', '''1//0(test|fake)[A-Za-z0-9_-]*''']
